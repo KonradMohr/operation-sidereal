@@ -161,8 +161,9 @@ class gamestate:
 
         self.conn.commit()
     
-    '''CRUD FUNCTIONS: boy I hate writing these'''
+    # CRUD FUNCTIONS: boy I hate writing these
 
+    # these are used to make new rows for the tables in the SQLite database
     def make_galaxy(self, galaxy_id, name, pos_x, pos_y, radius):
         self.cursor.execute('''
             INSERT INTO galaxies (galaxy_id, name, pos_x, pos_y, radius)
@@ -214,6 +215,14 @@ class gamestate:
             (ship_id, type, pos_x, pos_y, health)
         )
         self.conn.commit()
+
+    def make_total_throughput(self, planet_id, item_id, net_change, tick_cycle):
+        self.cursor.execute('''
+            INSERT INTO total_throughput (planet_id, item_id, net_change, tick_cycle)
+            VALUES (?, ?, ?, ?)
+            ''',
+            (planet_id, item_id, net_change, tick_cycle)
+        )
     
     def make_ship_invetory(self, ship_id, item_id, quantity, max_storage, max_population, quarters):
         self.cursor.execute('''
