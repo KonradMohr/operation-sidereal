@@ -371,20 +371,20 @@ class gamestate:
     def save_ship_equipment(self, ship_id, slot_type, item_id):
         self.cursor.execute('''
             UPDATE ship_equipment
-            SET slot_type = ?, item_id = ?
-            WHERE ship_id = ?
+            SET item_id = ?
+            WHERE ship_id = ? AND slot_type = ?
             ''',
-            (slot_type, item_id, ship_id)
+            (item_id, ship_id, slot_type)
         )
         self.conn.commit()
 
     def save_total_throughput(self, planet_id, item_id, net_change, tick_cycle):
         self.cursor.execute('''
             UPDATE total_throughput
-            SET item_id = ?, net_change = ?, tick_cycle = ?
-            WHERE planet_id = ?
+            SET net_change = ?, tick_cycle = ?
+            WHERE planet_id = ? AND item_id = ?
             ''',
-            (item_id, net_change, tick_cycle, planet_id)
+            (net_change, tick_cycle, planet_id, item_id)
         )
         self.conn.commit()
 
