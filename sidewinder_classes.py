@@ -124,7 +124,7 @@ class gamestate:
         
         # table to define solar systems
         self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS solar_systems (
+            CREATE TABLE IF NOT EXISTS solarsystem (
                 solarsystem_id TEXT PRIMARY KEY,
                 galaxy_id TEXT,
                 name TEXT,
@@ -135,9 +135,9 @@ class gamestate:
             '''
             )
 
-        # table to define macro galaxies
+        # table to define galaxies
         self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS galaxies (
+            CREATE TABLE IF NOT EXISTS galaxy (
                 galaxy_id TEXT PRIMARY KEY,
                 name TEXT,
                 pos_x REAL,
@@ -161,12 +161,12 @@ class gamestate:
 
         self.conn.commit()
     
-    # CRUD FUNCTIONS: boy I hate writing these
+    # CRUD FUNCTIONS: boy I hate writing these, but they are necessary for dynamic values that constantly get changed.
 
-    # these are used to make new rows for the tables in the SQLite database
+    # MAKE FUNCTIONS: easy to make, easy to use. These are used to make rows in the desired SQL table.
     def make_galaxy(self, galaxy_id, name, pos_x, pos_y, radius):
         self.cursor.execute('''
-            INSERT INTO galaxies (galaxy_id, name, pos_x, pos_y, radius)
+            INSERT INTO galaxy (galaxy_id, name, pos_x, pos_y, radius)
             VALUES (?, ?, ?, ?, ?)
             ''',
             (galaxy_id, name, pos_x, pos_y, radius)
@@ -175,7 +175,7 @@ class gamestate:
 
     def make_solarsystem(self, solarsystem_id, galaxy_id, name, distance, orbit, star_type):
         self.cursor.execute('''
-            INSERT INTO solar_systems (solarsystem_id, galaxy_id, name, distance, orbit, star_type)
+            INSERT INTO solarsystem (solarsystem_id, galaxy_id, name, distance, orbit, star_type)
             VALUES (?, ?, ?, ?, ?, ?)
             ''',
             (solarsystem_id, galaxy_id, name, distance, orbit, star_type)
@@ -232,6 +232,9 @@ class gamestate:
             (ship_id, item_id, quantity, max_storage, max_population, quarters)
         )
 
+    # REMOVE FUNCTIONS: easier to make, and easier to use then the MAKE FUNCTIONS family
+    # TODO: add funtions for these tables: total_throughput
+
     def remove_planet(self, planet_id):
         self.cursor.execute('''
             DELETE FROM planets
@@ -250,7 +253,64 @@ class gamestate:
         )
         self.conn.commit()
     
+    def remove_galaxy(self, galaxy_id):
+        self.cursor.execute('''
+            DELETE FROM galaxy
+            WHERE galaxy_id = ?
+            ''',
+            (galaxy_id,)
+        )
+        self.conn.commit()
+    
+    def remove_solarsystem(self, solarsystem_id):
+        self.cursor.execute('''
+            DELETE FROM solarsystem
+            WHERE solarsystem_id = ?
+            ''',
+            (solarsystem_id,)
+        )
+    
+    def remove_ship_equipment(self, ship_id):
+        self.cursor.execute('''
+            DELETE FROM ship_equipment
+            WHERE ship_id = ?
+            ''',
+            (ship_id,)
+        )
+        self.conn.commit()
+    
+    def remove_planet_invetory(self, planet_id):
+        self.cursor.execute('''
+            DELETE FROM planet_inv
+            WHERE planet_id = ?
+            ''',
+            (planet_id,)
+        )
+        self.conn.commit()
+    
+    def remove_ship_invetory(self, ship_id):
+        self.cursor.execute('''
+            DELETE FROM ship_inv
+            WHERE ship_id = ?
+            ''',
+            (ship_id,)
+        )
+        self.conn.commit()
+    
+    def remove_total_throughput(self, planet_id):
+        self.cursor.execute('''
+            DELETE FROM total_throughput
+            WHERE planet_id = ?
+            ''',
+            (planet_id,)
+        )
+        self.conn.commit()
+    
+
+    
     # save commands
+    # TODO: add funtions for these tables: galaxies, solar_systems, ship_equipment, planet_inv, ship_inv, ship_equipment, total_throughput
+
     def save_planet(self, planet_id, solarsystem_id, galaxy_id, type, distance, orbit, time, waterlv, map_path):
         self.cursor.execute('''
             UPDATE planets
@@ -271,6 +331,8 @@ class gamestate:
         )
         self.conn.commit()
 
+    # load functions, the hardest to make, out of the CRUD functions, but the most useful. well... they are all equally useful.
+    # TODO: add funtions for these tables: galaxies, solar_systems, ship_equipment, planet_inv, ship_inv, ship_equipment, total_throughput
     def load_ship(self, ship_id):
         self.cursor.execute('''
             SELECT pos_x, pos_y, health
