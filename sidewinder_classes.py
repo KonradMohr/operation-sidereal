@@ -394,8 +394,7 @@ class gamestate:
         )
         self.conn.commit()
 
-    # load functions, the hardest to make, out of the CRUD functions, but the most useful. well... they are all equally useful.
-    # TODO: add funtions for these tables: galaxies, solar_systems, ship_equipment, planet_inv, ship_inv, ship_equipment, total_throughput
+    # LOAD FUNCTIONS: the hardest to make, out of the CRUD functions, but the most useful. well... they are all equally useful.
     def load_ship(self, ship_id):
         self.cursor.execute('''
             SELECT pos_x, pos_y, health
@@ -520,10 +519,11 @@ class gamestate:
             self.solarsystem_ram[solarsystem_id] = {
                 "galaxy_id": pre_ram[0],
                 "name": pre_ram[1],
-                "orbit": pre_ram[2],
-                "star_type": pre_ram[3]
+                "distance": pre_ram[2],
+                "orbit": pre_ram[3],
+                "star_type": pre_ram[4]
             }
-            print(Fore.GREEN + f"Loaded solarsystem table {solarsystem_id} with item {item_id} to RAM")
+            print(Fore.GREEN + f"Loaded solarsystem table {solarsystem_id} to RAM")
             print(Fore.CYAN + str(self.solarsystem_ram[solarsystem_id]))
         else:
             print(Fore.RED + f"Failed to load solarsystem table {solarsystem_id} to RAM")
@@ -565,6 +565,6 @@ class gamestate:
                 "item_id": pre_ram[0]
             }
             print(Fore.GREEN + f"Loaded ship_equipment table {ship_id} with slot_type {slot_type} to RAM")
-            print(Fore.CYAN + self.ship_equipment_ram[(ship_id, slot_type)])
+            print(Fore.CYAN + str(self.ship_equipment_ram[(ship_id, slot_type)]))
         else:
             print(Fore.RED + f"Failed to load ship_equipment table {ship_id} with slot_type {slot_type} to RAM")
