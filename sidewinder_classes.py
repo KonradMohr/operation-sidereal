@@ -52,6 +52,12 @@ class gamestate:
         self.cursor = self.conn.cursor()
         self.planet_ram = {}
         self.ship_ram = {}
+        self.ship_inv_ram = {}
+        self.planet_inv_ram = {}
+        self.total_throughput_ram = {}
+        self.solarsystem_ram = {}
+        self.galaxy_ram = {}
+        self.ship_equipment_ram = {}
     
     def setup_tables(self):
 
@@ -82,7 +88,7 @@ class gamestate:
             '''
             )
 
-        # table that holds ship invetory data
+        # table that holds ship inventory data
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS ship_inv (
                 ship_id TEXT,
@@ -96,7 +102,7 @@ class gamestate:
             '''
             )
         
-        # table to hold planet invetory data
+        # table to hold planet inventory data
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS planet_inv (
                 planet_id TEXT,
@@ -199,7 +205,7 @@ class gamestate:
         )
         self.conn.commit()
     
-    def make_planet_invetory(self, planet_id, item_id, quantity, max_storage, max_population, quarters):
+    def make_planet_inventory(self, planet_id, item_id, quantity, max_storage, max_population, quarters):
         self.cursor.execute('''
             INSERT INTO planet_inv (planet_id, item_id, quantity, max_storage, max_population, quarters)
             VALUES (?, ?, ?, ?, ?, ?)
@@ -224,7 +230,7 @@ class gamestate:
             (planet_id, item_id, net_change, tick_cycle)
         )
     
-    def make_ship_invetory(self, ship_id, item_id, quantity, max_storage, max_population, quarters):
+    def make_ship_inventory(self, ship_id, item_id, quantity, max_storage, max_population, quarters):
         self.cursor.execute('''
             INSERT INTO ship_inv (ship_id, item_id, quantity, max_storage, max_population, quarters)
             VALUES (?, ?, ?, ?, ?, ?)
@@ -278,7 +284,7 @@ class gamestate:
         )
         self.conn.commit()
     
-    def remove_planet_invetory(self, planet_id):
+    def remove_planet_inventory(self, planet_id):
         self.cursor.execute('''
             DELETE FROM planet_inv
             WHERE planet_id = ?
@@ -287,7 +293,7 @@ class gamestate:
         )
         self.conn.commit()
     
-    def remove_ship_invetory(self, ship_id):
+    def remove_ship_inventory(self, ship_id):
         self.cursor.execute('''
             DELETE FROM ship_inv
             WHERE ship_id = ?
@@ -348,7 +354,7 @@ class gamestate:
         )
         self.conn.commit()
 
-    def save_planet_invetory(self, planet_id, item_id, quantity, max_storage, max_population, quarters):
+    def save_planet_inventory(self, planet_id, item_id, quantity, max_storage, max_population, quarters):
         self.cursor.execute('''
             UPDATE planet_inv
             SET quantity = ?, max_storage = ?, max_population = ?, quarters = ?
@@ -358,7 +364,7 @@ class gamestate:
         )
         self.conn.commit()
     
-    def save_ship_invetory(self, ship_id, item_id, quantity, max_storage, max_population, quarters):
+    def save_ship_inventory(self, ship_id, item_id, quantity, max_storage, max_population, quarters):
         self.cursor.execute('''
             UPDATE ship_inv
             SET quantity = ?, max_storage = ?, max_population = ?, quarters = ?
@@ -398,17 +404,17 @@ class gamestate:
         ''',
             (ship_id,)
         )
-        pre_ram_ship = self.cursor.fetchone()
-        if pre_ram_ship:
+        pre_ram = self.cursor.fetchone()
+        if pre_ram:
             self.ship_ram[ship_id] = {
-                "pos_x": pre_ram_ship[0],
-                "pos_y": pre_ram_ship[1],
-                "health": pre_ram_ship[2]
+                "pos_x": pre_ram[0],
+                "pos_y": pre_ram[1],
+                "health": pre_ram[2]
             }
-            print(Fore.GREEN + f"Saved ship {ship_id} to RAM")
-            print(Fore.CYAN + self.ship_ram)
+            print(Fore.GREEN + f"Saved ship table {ship_id} to RAM")
+            print(Fore.CYAN + self.ship_ram[ship_id])
         else:
-            print(Fore.RED + f"failed to load ship database {ship_id} to ram: Ship id not found!")
+            print(Fore.RED + f"Failed to load ship table {ship_id} to RAM: Ship ID not found!")
 
     def load_planet(self, planet_id):
         self.cursor.execute('''
@@ -418,20 +424,147 @@ class gamestate:
             ''',
             (planet_id,)
         )
-        pre_ram_planet = self.cursor.fetchone()
+        pre_ram = self.cursor.fetchone()
 
-        if pre_ram_planet:
+        if pre_ram:
             self.planet_ram[planet_id] = {
-                "solarsystem_id": pre_ram_planet[0],
-                "galaxy_id": pre_ram_planet[1],
-                "type": pre_ram_planet[2],
-                "distance": pre_ram_planet[3],
-                "orbit": pre_ram_planet[4],
-                "time": pre_ram_planet[5],
-                "waterlv": pre_ram_planet[6],
-                "map_path": pre_ram_planet[7]
+                "solarsystem_id": pre_ram[0],
+                "galaxy_id": pre_ram[1],
+                "type": pre_ram[2],
+                "distance": pre_ram[3],
+                "orbit": pre_ram[4],
+                "time": pre_ram[5],
+                "waterlv": pre_ram[6],
+                "map_path": pre_ram[7]
             }
-            print(Fore.GREEN + f"Saved planet {planet_id} to RAM")
-            print(Fore.CYAN + str(self.planet_ram))
+            print(Fore.GREEN + f"Loaded planet table {planet_id} to RAM")
+            print(Fore.CYAN + str(self.planet_ram[planet_id]))
         else:
-            print(Fore.RED + f"failed to load planet database {planet_id} to ram: Planet id not found!")
+            print(Fore.RED + f"Failed to load planet table {planet_id} to RAM: Planet ID not found!")
+        
+    def load_ship_inventory(self, ship_id, item_id):
+        self.cursor.execute('''
+            SELECT quantity, max_storage, max_population, quarters
+            FROM ship_inv
+            WHERE ship_id = ? AND item_id = ?
+            ''',
+            (ship_id, item_id)
+        )
+        pre_ram = self.cursor.fetchone()
+
+        if pre_ram:
+            self.ship_inv_ram[(ship_id, item_id)] = {
+                "quantity": pre_ram[0],
+                "max_storage": pre_ram[1],
+                "max_population": pre_ram[2],
+                "quarters": pre_ram[3]
+            }
+            print(Fore.GREEN + f"Loaded ship inventory table {ship_id} with item {item_id} to RAM")
+            print(Fore.CYAN + str(self.ship_inv_ram[(ship_id, item_id)]))
+        else:
+            print(Fore.RED + f"Failed to load ship inventory table {ship_id} with item {item_id} to RAM")
+    
+    def load_planet_inventory(self, planet_id, item_id):
+        self.cursor.execute('''
+            SELECT quantity, max_storage, max_population, quarters
+            FROM planet_inv
+            WHERE planet_id = ? AND item_id = ?
+            ''',
+            (planet_id, item_id)
+        )
+        pre_ram = self.cursor.fetchone()
+
+        if pre_ram:
+            self.planet_inv_ram[(planet_id, item_id)] = {
+                "quantity": pre_ram[0],
+                "max_storage": pre_ram[1],
+                "max_population": pre_ram[2],
+                "quarters": pre_ram[3]
+            }
+            print(Fore.GREEN + f"Loaded planet inventory table {planet_id} with item {item_id} to RAM")
+            print(Fore.CYAN + str(self.planet_inv_ram[(planet_id, item_id)]))
+        else:
+            print(Fore.RED + f"Failed to load planet invetory table {planet_id} with item {item_id} to RAM")
+    
+    def load_total_throughput(self, planet_id, item_id):
+        self.cursor.execute('''
+            SELECT net_change, tick_cycle
+            FROM total_throughput
+            WHERE planet_id = ? AND item_id = ?
+            ''',
+            (planet_id, item_id)
+        )
+        pre_ram = self.cursor.fetchone()
+
+        if pre_ram:
+            self.total_throughput_ram[(planet_id, item_id)] = {
+                "net_change": pre_ram[0],
+                "tick_cycle": pre_ram[1]
+            }
+            print(Fore.GREEN + f"Loaded throughput table {planet_id} with item {item_id} to RAM")
+            print(Fore.CYAN + str(self.total_throughput_ram[(planet_id, item_id)]))
+        else:
+            print(Fore.RED + f"Failed to load throughput table {planet_id} with item {item_id} to RAM")
+    
+    def load_solarsystem(self, solarsystem_id):
+        self.cursor.execute('''
+            SELECT galaxy_id, name, distance, orbit, star_type
+            FROM solarsystem
+            WHERE solarsystem_id = ?
+            ''',
+            (solarsystem_id,)
+        )
+        pre_ram = self.cursor.fetchone()
+
+        if pre_ram:
+            self.solarsystem_ram[solarsystem_id] = {
+                "galaxy_id": pre_ram[0],
+                "name": pre_ram[1],
+                "orbit": pre_ram[2],
+                "star_type": pre_ram[3]
+            }
+            print(Fore.GREEN + f"Loaded solarsystem table {solarsystem_id} with item {item_id} to RAM")
+            print(Fore.CYAN + str(self.solarsystem_ram[solarsystem_id]))
+        else:
+            print(Fore.RED + f"Failed to load solarsystem table {solarsystem_id} to RAM")
+    
+    def load_galaxy(self, galaxy_id):
+        self.cursor.execute('''
+            SELECT name, pos_x, pos_y, radius
+            FROM galaxy
+            WHERE galaxy_id = ?
+            ''',
+            (galaxy_id,)
+        )
+        pre_ram = self.cursor.fetchone()
+
+        if pre_ram:
+            self.galaxy_ram[galaxy_id] = {
+                "name": pre_ram[0],
+                "pos_x": pre_ram[1],
+                "pos_y": pre_ram[2],
+                "radius": pre_ram[3]
+            }
+            print(Fore.GREEN + f"Loaded galaxy table {galaxy_id} to RAM")
+            print(Fore.CYAN + str(self.galaxy_ram[galaxy_id]))
+        else:
+            print(Fore.RED + f"Failed to load galaxy table {galaxy_id} to RAM")
+    
+    def load_ship_equipment(self, ship_id, slot_type):
+        self.cursor.execute('''
+            SELECT item_id
+            FROM ship_equipment
+            WHERE ship_id = ? AND slot_type = ?
+            ''',
+            (ship_id, slot_type)
+        )
+        pre_ram = self.cursor.fetchone()
+
+        if pre_ram:
+            self.ship_equipment_ram[(ship_id, slot_type)] = {
+                "item_id": pre_ram[0]
+            }
+            print(Fore.GREEN + f"Loaded ship_equipment table {ship_id} with slot_type {slot_type} to RAM")
+            print(Fore.CYAN + self.ship_equipment_ram[(ship_id, slot_type)])
+        else:
+            print(Fore.RED + f"Failed to load ship_equipment table {ship_id} with slot_type {slot_type} to RAM")
