@@ -215,10 +215,12 @@ class gamestate:
         )
         self.conn.commit()
     
-    def make_ship_invetory(self, ship_id):
+    def make_ship_invetory(self, ship_id, item_id, quantity, max_storage, max_population, quarters):
         self.cursor.execute('''
-            
-            '''
+            INSERT INTO ship_inv (ship_id, item_id, quantity, max_storage, max_population, quarters)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ''',
+            (ship_id, item_id, quantity, max_storage, max_population, quarters)
         )
 
     def remove_planet(self, planet_id):
