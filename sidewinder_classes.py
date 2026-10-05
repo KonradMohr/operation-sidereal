@@ -395,6 +395,7 @@ class gamestate:
         self.conn.commit()
 
     # LOAD FUNCTIONS: the hardest to make, out of the CRUD functions, but the most useful. well... they are all equally useful.
+    
     def load_ship(self, ship_id):
         self.cursor.execute('''
             SELECT pos_x, pos_y, health

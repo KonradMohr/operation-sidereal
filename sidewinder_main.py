@@ -1,6 +1,4 @@
-import websockets
 import wasmtime
-import asyncio
 import json
 import numpy
 import random
@@ -14,10 +12,9 @@ init(autoreset=True)
 
 banner_text = pyfiglet.figlet_format("Sidewinder engine", font="slant")
 engine_dir = Path(__file__).parent
-planet_attr_save_name = engine_dir / "json_files/planet_attr.json"
-planet_ind_attr_save_name = engine_dir / "json_files/planet_ind_attr.json"
 planet_maps_dir = engine_dir / "planet_maps"
 item_attr_save_name = engine_dir / "json_files/item_attr.json"
+ship_type_save_name = engine_dir / "json_files/ship_types.json"
 game_db = gamestate(engine_dir / "gamestate.db")
 def startup_checks():
     
@@ -34,6 +31,11 @@ def startup_checks():
         print(Fore.GREEN + "\nItem attributes JSON present: Continuing startup")
     else:
         sys.exit(Fore.RED + "\nItem attributes JSON not found: Stopping")
+    
+    if ship_type_save_name.is_file():
+        print(Fore.GREEN + "\nShip types JSON present: Continuing startup")
+    else:
+        sys.exit(Fore.RED + "\nShip types JSON not found: Stopping")
 
     # set up tables
     try:
