@@ -331,7 +331,7 @@ class gamestate:
     def save_galaxy(self, galaxy_id, name, pos_x, pos_y, radius):
         self.cursor.execute('''
             UPDATE galaxy
-            SET name = ?, pos_y = ?, pos_y = ?, radius = ?
+            SET name = ?, pos_x = ?, pos_y = ?, radius = ?
             WHERE galaxy_id = ?
             ''',
             (name, pos_x, pos_y, radius, galaxy_id)
@@ -346,24 +346,25 @@ class gamestate:
             ''',
             (galaxy_id, name, distance, orbit, star_type, solarsystem_id)
         )
+        self.conn.commit()
 
     def save_planet_invetory(self, planet_id, item_id, quantity, max_storage, max_population, quarters):
         self.cursor.execute('''
             UPDATE planet_inv
-            SET item_id = ?, quantity = ?, max_storage = ?, max_population = ?, quarters = ?
-            WHERE planet_id = ?
+            SET quantity = ?, max_storage = ?, max_population = ?, quarters = ?
+            WHERE planet_id = ? AND item_id = ?
             ''',
-            (item_id, quantity, max_storage, max_population, quarters, planet_id)
+            (quantity, max_storage, max_population, quarters, planet_id, item_id)
         )
         self.conn.commit()
     
     def save_ship_invetory(self, ship_id, item_id, quantity, max_storage, max_population, quarters):
         self.cursor.execute('''
             UPDATE ship_inv
-            SET item_id = ?, quantity = ?, max_storage = ?, max_population = ?, quarters = ?
-            WHERE ship_id = ?
+            SET quantity = ?, max_storage = ?, max_population = ?, quarters = ?
+            WHERE ship_id = ? AND item_id = ?
             ''',
-            (item_id, quantity, max_storage, max_population, quarters, ship_id)
+            (quantity, max_storage, max_population, quarters, ship_id, item_id)
         )
         self.conn.commit()
     
