@@ -217,6 +217,7 @@ class gamestate:
     
     def make_ship_invetory(self, ship_id):
         self.cursor.execute('''
+            
             '''
         )
 
