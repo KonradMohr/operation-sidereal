@@ -216,7 +216,9 @@ class gamestate:
         self.conn.commit()
     
     def make_ship_invetory(self, ship_id):
-        print("temp")
+        self.cursor.execute('''
+            '''
+        )
 
     def remove_planet(self, planet_id):
         self.cursor.execute('''
