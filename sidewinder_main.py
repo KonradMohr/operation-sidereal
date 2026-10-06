@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 from colorama import Fore, Back, Style, init
 import pyfiglet
-from sidewinder_classes import registry, gamestate
+from sidewinder_classes import Registry, GameState
 
 init(autoreset=True)
 
@@ -16,7 +16,7 @@ planet_maps_dir = engine_dir / "planet_maps"
 item_sprites_dir = engine_dir / "item_sprites"
 item_attr_save_name = engine_dir / "json_files/item_attr.json"
 ship_type_save_name = engine_dir / "json_files/ship_types.json"
-game_db = gamestate(engine_dir / "gamestate.db")
+game_db = GameState(engine_dir / "gamestate.db")
 def startup_checks():
     
     print(Fore.CYAN + banner_text) 

@@ -3,11 +3,12 @@ import sys
 from colorama import Fore, init
 import sqlite3
 from pathlib import Path
+import numpy as np
 
 init(autoreset=True)
 
 # This sets up the static jsons and adds commands to make it load.
-class registry:
+class Registry:
     def __init__(self):
         self._items = {}
         self._ship_types = {}
@@ -58,7 +59,7 @@ class registry:
             return {"name": None, "input": None, "output": None, "machine_type": None, "min_machine_lv": None}
         
         return crafting_recipe
-            
+
     def load_machine(self, machine_id):
         machine = self._machine.get(machine_id)
 
@@ -68,7 +69,7 @@ class registry:
         return machine
 
 # This is used to modify or change values of things that rapidly change. Such as planets, ships, etc...
-class gamestate:
+class GameState:
     
     def __init__(self, db_path):
         self.conn = sqlite3.connect(db_path)
@@ -81,6 +82,7 @@ class gamestate:
         self.solarsystem_ram = {}
         self.galaxy_ram = {}
         self.ship_equipment_ram = {}
+        self.factory_tilegrids_ram = []
     
     def setup_tables(self):
 
@@ -117,9 +119,7 @@ class gamestate:
                 ship_id TEXT,
                 item_id TEXT,
                 quantity INTEGER,
-                max_storage INTEGER,
-                max_population INTEGER,
-                quarters INTEGER,
+                max_storage INTEGER
                 PRIMARY KEY (ship_id, item_id)
             )
             '''
@@ -131,9 +131,7 @@ class gamestate:
                 planet_id TEXT,
                 item_id TEXT,
                 quantity INTEGER,
-                max_storage INTEGER,
-                max_population INTEGER,
-                quarters INTEGER,
+                max_storage INTEGER
                 PRIMARY KEY (planet_id, item_id)
             )
             '''
@@ -187,6 +185,16 @@ class gamestate:
             '''
             )
         
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS factory_tilegrids (
+                grid_id TEXT PRIMARY KEY,
+                planet_id TEXT,
+                pos_x REAL,
+                pos_y REAL
+            )
+            '''
+        )
+        
 
         self.conn.commit()
     
@@ -218,6 +226,7 @@ class gamestate:
             ''',
             (ship_id, slot_type, item_id)
         )
+        self.conn.commit()
 
     def make_planet(self, planet_id, solarsystem_id, galaxy_id, type, distance, orbit, time, waterlv, map_path):
         self.cursor.execute('''
@@ -228,13 +237,14 @@ class gamestate:
         )
         self.conn.commit()
     
-    def make_planet_inventory(self, planet_id, item_id, quantity, max_storage, max_population, quarters):
+    def make_planet_inventory(self, planet_id, item_id, quantity, max_storage):
         self.cursor.execute('''
-            INSERT INTO planet_inv (planet_id, item_id, quantity, max_storage, max_population, quarters)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO planet_inv (planet_id, item_id, quantity, max_storage)
+            VALUES (?, ?, ?, ?, ?)
             ''',
-            (planet_id, item_id, quantity, max_storage, max_population, quarters)
+            (planet_id, item_id, quantity, max_storage)
         )
+        self.conn.commit()
 
     def make_ship(self, ship_id, type, pos_x, pos_y, health):
         self.cursor.execute('''
@@ -252,14 +262,25 @@ class gamestate:
             ''',
             (planet_id, item_id, net_change, tick_cycle)
         )
+        self.conn.commit()
     
-    def make_ship_inventory(self, ship_id, item_id, quantity, max_storage, max_population, quarters):
+    def make_ship_inventory(self, ship_id, item_id, quantity, max_storage):
         self.cursor.execute('''
-            INSERT INTO ship_inv (ship_id, item_id, quantity, max_storage, max_population, quarters)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO ship_inv (ship_id, item_id, quantity, max_storage)
+            VALUES (?, ?, ?, ?, ?)
             ''',
-            (ship_id, item_id, quantity, max_storage, max_population, quarters)
+            (ship_id, item_id, quantity, max_storage)
         )
+        self.conn.commit()
+    
+    def make_factory_tilegrid(self, grid_id, planet_id, pos_x, pos_y):
+        self.cursor.execute('''
+            INSERT INTO factory_tilegrids (grid_id, planet_id, pos_x, pos_y)
+            VALUES (?, ?, ?, ?)
+            ''',
+            (grid_id, planet_id, pos_x, pos_y)
+        )
+        self.conn.commit()
 
     # REMOVE FUNCTIONS: easier to make, and easier to use then the MAKE FUNCTIONS family
 
@@ -297,6 +318,7 @@ class gamestate:
             ''',
             (solarsystem_id,)
         )
+        self.conn.commit()
     
     def remove_ship_equipment(self, ship_id):
         self.cursor.execute('''
@@ -333,7 +355,15 @@ class gamestate:
             (planet_id,)
         )
         self.conn.commit()
-    
+
+    def remove_factory_tilegrid(self, grid_id):
+        self.cursor.execute('''
+            DELETE FROM factory_tilegrids
+            WHERE grid_id = ?
+            ''',
+            (grid_id,)
+        )
+        self.conn.commit()
     
     # SAVE FUNCTIONS: Saves data to a specific row in a table, this took 2 and a half hours to finish, please treat it well.
 
@@ -377,23 +407,23 @@ class gamestate:
         )
         self.conn.commit()
 
-    def save_planet_inventory(self, planet_id, item_id, quantity, max_storage, max_population, quarters):
+    def save_planet_inventory(self, planet_id, item_id, quantity, max_storage):
         self.cursor.execute('''
             UPDATE planet_inv
-            SET quantity = ?, max_storage = ?, max_population = ?, quarters = ?
+            SET quantity = ?, max_storage = ?
             WHERE planet_id = ? AND item_id = ?
             ''',
-            (quantity, max_storage, max_population, quarters, planet_id, item_id)
+            (quantity, max_storage, planet_id, item_id)
         )
         self.conn.commit()
     
-    def save_ship_inventory(self, ship_id, item_id, quantity, max_storage, max_population, quarters):
+    def save_ship_inventory(self, ship_id, item_id, quantity, max_storage):
         self.cursor.execute('''
             UPDATE ship_inv
-            SET quantity = ?, max_storage = ?, max_population = ?, quarters = ?
+            SET quantity = ?, max_storage = ?
             WHERE ship_id = ? AND item_id = ?
             ''',
-            (quantity, max_storage, max_population, quarters, ship_id, item_id)
+            (quantity, max_storage, ship_id, item_id)
         )
         self.conn.commit()
     
@@ -416,6 +446,7 @@ class gamestate:
             (net_change, tick_cycle, planet_id, item_id)
         )
         self.conn.commit()
+    
 
     # LOAD FUNCTIONS: the hardest to make, out of the CRUD functions, but the most useful. well... they are all equally useful.
     
@@ -467,7 +498,7 @@ class gamestate:
         
     def load_ship_inventory(self, ship_id, item_id):
         self.cursor.execute('''
-            SELECT quantity, max_storage, max_population, quarters
+            SELECT quantity, max_storage
             FROM ship_inv
             WHERE ship_id = ? AND item_id = ?
             ''',
@@ -478,9 +509,7 @@ class gamestate:
         if pre_ram:
             self.ship_inv_ram[(ship_id, item_id)] = {
                 "quantity": pre_ram[0],
-                "max_storage": pre_ram[1],
-                "max_population": pre_ram[2],
-                "quarters": pre_ram[3]
+                "max_storage": pre_ram[1]
             }
             print(Fore.GREEN + f"Loaded ship inventory table {ship_id} with item {item_id} to RAM")
             print(Fore.CYAN + str(self.ship_inv_ram[(ship_id, item_id)]))
@@ -489,7 +518,7 @@ class gamestate:
     
     def load_planet_inventory(self, planet_id, item_id):
         self.cursor.execute('''
-            SELECT quantity, max_storage, max_population, quarters
+            SELECT quantity, max_storage
             FROM planet_inv
             WHERE planet_id = ? AND item_id = ?
             ''',
@@ -500,9 +529,7 @@ class gamestate:
         if pre_ram:
             self.planet_inv_ram[(planet_id, item_id)] = {
                 "quantity": pre_ram[0],
-                "max_storage": pre_ram[1],
-                "max_population": pre_ram[2],
-                "quarters": pre_ram[3]
+                "max_storage": pre_ram[1]
             }
             print(Fore.GREEN + f"Loaded planet inventory table {planet_id} with item {item_id} to RAM")
             print(Fore.CYAN + str(self.planet_inv_ram[(planet_id, item_id)]))
@@ -592,3 +619,35 @@ class gamestate:
             print(Fore.CYAN + str(self.ship_equipment_ram[(ship_id, slot_type)]))
         else:
             print(Fore.RED + f"Failed to load ship_equipment table {ship_id} with slot_type {slot_type} to RAM")
+    
+    def load_factory_tilegrid(self, planet_id):
+        self.cursor.execute('''
+            SELECT grid_id, pos_x, pos_y
+            FROM factory_tilegrids
+            WHERE planet_id = ?
+            ''',
+            (planet_id,)
+        )
+        pre_ram = self.cursor.fetchall()
+
+        if pre_ram:
+            for row in pre_ram:
+                grid_id = row[0]
+                pos_x = row[1]
+                pos_y = row[2]
+
+                self.factory_tilegrids_ram[planet_id].append({
+                    "grid_id": grid_id,
+                    "pos_x": pos_x,
+                    "pos_y": pos_y
+                })
+
+            print(Fore.GREEN + f"Loaded factory_tilegrids table {planet_id} to RAM")
+            print(Fore.CYAN + str(self.factory_tilegrid[planet_id]))
+        else:
+            print(Fore.RED + f"Failed to load factory_tilegrids table {planet_id} to RAM")
+
+
+class TileGrid:
+    def __init__(self, x, y):
+        self._grid = np.zeros((x, y), dtype=int)
