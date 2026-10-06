@@ -11,7 +11,7 @@ class registry:
     def __init__(self):
         self._items = {}
         self._ship_types = {}
-        self._crafting_bp = {}
+        self._crafting_recipe = {}
         self._machine = {}
     
     def load(self, file_path, target_dict_name):
@@ -23,8 +23,8 @@ class registry:
                     self._items = parsed_data
                 elif target_dict_name == "ship_type":
                     self._ship_types = parsed_data
-                elif target_dict_name == "crafting_bp":
-                    self._crafting_bp = parsed_data
+                elif target_dict_name == "crafting_recipe":
+                    self._crafting_recipe = parsed_data
                 elif target_dict_name == "machine":
                     self._machine = parsed_data
 
@@ -50,15 +50,15 @@ class registry:
         
         return ship_type
     
-    def load_crafting_bp(self, crafting_id):
-        crafting_bp = self._crafting_bp.get(crafting_id)
+    def load_crafting_recipe(self, crafting_id):
+        crafting_recipe = self._crafting_recipe.get(crafting_id)
 
-        if crafting_bp is None:
+        if crafting_recipe is None:
             print(Fore.YELLOW + f"WARNING: Attempted to fetch non-existent crafting recipe '{crafting_id}'.")
             return {"name": None, "input": None, "output": None, "machine_type": None, "min_machine_lv": None}
         
-        return crafting_bp
-    
+        return crafting_recipe
+            
     def load_machine(self, machine_id):
         machine = self._machine.get(machine_id)
 
