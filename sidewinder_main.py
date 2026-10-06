@@ -13,6 +13,7 @@ init(autoreset=True)
 banner_text = pyfiglet.figlet_format("Sidewinder engine", font="slant")
 engine_dir = Path(__file__).parent
 planet_maps_dir = engine_dir / "planet_maps"
+item_sprites_dir = engine_dir / "item_sprites"
 item_attr_save_name = engine_dir / "json_files/item_attr.json"
 ship_type_save_name = engine_dir / "json_files/ship_types.json"
 game_db = gamestate(engine_dir / "gamestate.db")

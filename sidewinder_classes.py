@@ -11,6 +11,8 @@ class registry:
     def __init__(self):
         self._items = {}
         self._ship_types = {}
+        self._crafting_bp = {}
+        self._machine = {}
     
     def load(self, file_path, target_dict_name):
         try:
@@ -21,28 +23,49 @@ class registry:
                     self._items = parsed_data
                 elif target_dict_name == "ship_type":
                     self._ship_types = parsed_data
+                elif target_dict_name == "crafting_bp":
+                    self._crafting_bp = parsed_data
+                elif target_dict_name == "machine":
+                    self._machine = parsed_data
 
             print(Fore.GREEN + f"Parsed {file_path.name} successfully!")
         except json.JSONDecodeError:
             sys.exit(Fore.RED + f"ERROR: failed to parse JSON {file_path.name}, possibly corrupted or formatted badly")
 
-    def get_item(self, item_id):
+    def load_item(self, item_id):
         item = self._items.get(item_id)
 
         if item is None:
             print(Fore.YELLOW + f"WARNING: Attempted to fetch non-existent item '{item_id}'.")
-            return {"name": None, "type": None, "speed": None, "mass": None, "crafting_lv": None}
+            return {"name": None, "type": None, "mass": None, "sprite": None}
 
         return item
     
-    def get_ship_type(self, ship_type_id):
+    def load_ship_type(self, ship_type_id):
         ship_type = self._ship_types.get(ship_type_id)
 
         if ship_type is None:
             print(Fore.YELLOW + f"WARNING: Attempted to fetch non-existent ship type '{ship_type_id}'.")
-            return {"name": None, "type": None, "speed": None, "acceleration": None, "health": None}
-
+            return {"name": None, "type": None, "speed": None, "acceleration": None, "health": None, "sprite": None}
+        
         return ship_type
+    
+    def load_crafting_bp(self, crafting_id):
+        crafting_bp = self._crafting_bp.get(crafting_id)
+
+        if crafting_bp is None:
+            print(Fore.YELLOW + f"WARNING: Attempted to fetch non-existent crafting recipe '{crafting_id}'.")
+            return {"name": None, "input": None, "output": None, "machine_type": None, "min_machine_lv": None}
+        
+        return crafting_bp
+    
+    def load_machine(self, machine_id):
+        machine = self._machine.get(machine_id)
+
+        if machine is None:
+            print(Fore.YELLOW + f"WARNING: Attempted to fetch non-existent machine '{machine_id}'.")
+            return {"name": None, "tile_id": None, "machine_type": None, "machine_lv": None, "power_requirment": None, "power_output": None, "max_input": None, "speed": None, "tile_size": None}
+        return machine
 
 # This is used to modify or change values of things that rapidly change. Such as planets, ships, etc...
 class gamestate:
