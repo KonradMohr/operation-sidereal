@@ -65,7 +65,7 @@ class Registry:
 
         if machine is None:
             print(Fore.YELLOW + f"WARNING: Attempted to fetch non-existent machine '{machine_id}'.")
-            return {"name": None, "tile_id": None, "machine_type": None, "machine_lv": None, "power_requirment": None, "power_output": None, "max_input": None, "speed": None, "tile_size": None}
+            return {"name": None, "tile_id": None, "machine_type": None, "machine_lv": None, "power_requirment": None, "power_output": None, "max_input": None, "speed": None, "width": None, "height": None}
         return machine
 
 # This is used to modify or change values of things that rapidly change. Such as planets, ships, etc...
@@ -82,7 +82,8 @@ class GameState:
         self.solarsystem_ram = {}
         self.galaxy_ram = {}
         self.ship_equipment_ram = {}
-        self.factory_tilegrids_ram = []
+        self.factory_tilegrids_ram = {}
+        self.grid_data_ram = {}
     
     def setup_tables(self):
 
@@ -194,7 +195,18 @@ class GameState:
             )
             '''
         )
-        
+
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS grid_data (
+                grid_id TEXT PRIMARY KEY,
+                height INTEGER,
+                width INTEGER,
+                matrix_blob BLOB,
+                next_instance INTEGER,
+                active_machines_json TEXT
+            )
+            '''
+        )
 
         self.conn.commit()
     
@@ -281,6 +293,15 @@ class GameState:
             (grid_id, planet_id, pos_x, pos_y)
         )
         self.conn.commit()
+    
+    def make_grid_data(self, grid_id, height, width, matrix_blob, next_instance, active_machines_json):
+        self.cursor.execute('''
+            INSERT INTO grid_data (grid_id, height, width, matrix_blob, next_instance, active_machines_json)
+            VALUES (?, ?, ?, ?)
+            ''',
+            (grid_id, height, width, matrix_blob, next_instance, active_machines_json)
+        )
+        self.conn.commit()
 
     # REMOVE FUNCTIONS: easier to make, and easier to use then the MAKE FUNCTIONS family
 
@@ -365,6 +386,14 @@ class GameState:
         )
         self.conn.commit()
     
+    def remove_grid_data(self, grid_id):
+        self.cursor.execute('''
+            DELETE FROM grid_data
+            WHERE grid_id = ?
+            ''',
+            (grid_id,)
+        )
+    
     # SAVE FUNCTIONS: Saves data to a specific row in a table, this took 2 and a half hours to finish, please treat it well.
 
     def save_planet(self, planet_id, solarsystem_id, galaxy_id, type, distance, orbit, time, waterlv, map_path):
@@ -447,6 +476,16 @@ class GameState:
         )
         self.conn.commit()
     
+    def save_grid_data(self, grid_id, height, width, matrix_blob, next_instance, active_machines_json):
+        self.cursor.execute('''
+            UPDATE grid_data
+            SET height = ?, width = ?, matrix_blob = ?, next_instance = ?, active_machines_json = ?
+            WHERE grid_id = ?
+            ''',
+            (height, width, matrix_blob, next_instance, active_machines_json)
+        )
+        self.conn.commit()
+    
 
     # LOAD FUNCTIONS: the hardest to make, out of the CRUD functions, but the most useful. well... they are all equally useful.
     
@@ -459,12 +498,15 @@ class GameState:
             (ship_id,)
         )
         pre_ram = self.cursor.fetchone()
+
         if pre_ram:
+
             self.ship_ram[ship_id] = {
                 "pos_x": pre_ram[0],
                 "pos_y": pre_ram[1],
                 "health": pre_ram[2]
             }
+
             print(Fore.GREEN + f"Saved ship table {ship_id} to RAM")
             print(Fore.CYAN + self.ship_ram[ship_id])
         else:
@@ -481,6 +523,7 @@ class GameState:
         pre_ram = self.cursor.fetchone()
 
         if pre_ram:
+
             self.planet_ram[planet_id] = {
                 "solarsystem_id": pre_ram[0],
                 "galaxy_id": pre_ram[1],
@@ -491,6 +534,7 @@ class GameState:
                 "waterlv": pre_ram[6],
                 "map_path": pre_ram[7]
             }
+
             print(Fore.GREEN + f"Loaded planet table {planet_id} to RAM")
             print(Fore.CYAN + str(self.planet_ram[planet_id]))
         else:
@@ -507,10 +551,12 @@ class GameState:
         pre_ram = self.cursor.fetchone()
 
         if pre_ram:
+
             self.ship_inv_ram[(ship_id, item_id)] = {
                 "quantity": pre_ram[0],
                 "max_storage": pre_ram[1]
             }
+
             print(Fore.GREEN + f"Loaded ship inventory table {ship_id} with item {item_id} to RAM")
             print(Fore.CYAN + str(self.ship_inv_ram[(ship_id, item_id)]))
         else:
@@ -527,10 +573,12 @@ class GameState:
         pre_ram = self.cursor.fetchone()
 
         if pre_ram:
+
             self.planet_inv_ram[(planet_id, item_id)] = {
                 "quantity": pre_ram[0],
                 "max_storage": pre_ram[1]
             }
+
             print(Fore.GREEN + f"Loaded planet inventory table {planet_id} with item {item_id} to RAM")
             print(Fore.CYAN + str(self.planet_inv_ram[(planet_id, item_id)]))
         else:
@@ -547,10 +595,12 @@ class GameState:
         pre_ram = self.cursor.fetchone()
 
         if pre_ram:
+
             self.total_throughput_ram[(planet_id, item_id)] = {
                 "net_change": pre_ram[0],
                 "tick_cycle": pre_ram[1]
             }
+
             print(Fore.GREEN + f"Loaded throughput table {planet_id} with item {item_id} to RAM")
             print(Fore.CYAN + str(self.total_throughput_ram[(planet_id, item_id)]))
         else:
@@ -567,6 +617,7 @@ class GameState:
         pre_ram = self.cursor.fetchone()
 
         if pre_ram:
+
             self.solarsystem_ram[solarsystem_id] = {
                 "galaxy_id": pre_ram[0],
                 "name": pre_ram[1],
@@ -574,6 +625,7 @@ class GameState:
                 "orbit": pre_ram[3],
                 "star_type": pre_ram[4]
             }
+
             print(Fore.GREEN + f"Loaded solarsystem table {solarsystem_id} to RAM")
             print(Fore.CYAN + str(self.solarsystem_ram[solarsystem_id]))
         else:
@@ -612,9 +664,11 @@ class GameState:
         pre_ram = self.cursor.fetchone()
 
         if pre_ram:
+
             self.ship_equipment_ram[(ship_id, slot_type)] = {
                 "item_id": pre_ram[0]
             }
+
             print(Fore.GREEN + f"Loaded ship_equipment table {ship_id} with slot_type {slot_type} to RAM")
             print(Fore.CYAN + str(self.ship_equipment_ram[(ship_id, slot_type)]))
         else:
@@ -631,6 +685,10 @@ class GameState:
         pre_ram = self.cursor.fetchall()
 
         if pre_ram:
+
+            if planet_id not in self.factory_tilegrids_ram:
+                self.factory_tilegrids_ram[planet_id] = []
+            
             for row in pre_ram:
                 grid_id = row[0]
                 pos_x = row[1]
@@ -643,11 +701,77 @@ class GameState:
                 })
 
             print(Fore.GREEN + f"Loaded factory_tilegrids table {planet_id} to RAM")
-            print(Fore.CYAN + str(self.factory_tilegrid[planet_id]))
+            print(Fore.CYAN + str(self.factory_tilegrids_ram[planet_id]))
         else:
             print(Fore.RED + f"Failed to load factory_tilegrids table {planet_id} to RAM")
 
+    def load_grid_data(self, grid_id):
+        self.cursor.execute('''
+            SELECT height, width, matrix_blob, next_instance, active_machines_json
+            FROM grid_data
+            WHERE grid_id = ?
+            ''',
+            (grid_id,)
+        )
+        pre_ram = self.cursor.fetchone()
 
-class TileGrid:
-    def __init__(self, x, y):
-        self._grid = np.zeros((x, y), dtype=int)
+        if pre_ram:
+            self.grid_data_ram[grid_id] = {
+                "height": pre_ram[0],
+                "width": pre_ram[1],
+                "matrix_blob": pre_ram[2],
+                "next_instance": pre_ram[3],
+                "active_machines_json": pre_ram[4]
+            }
+
+            print(Fore.GREEN + f"Loaded grid_data table {grid_id} to RAM")
+            print(Fore.CYAN + str(self.grid_data_ram[grid_id]))
+        else:
+            print(Fore.RED + f"Failed to load grid_data table {grid_id} to RAM")
+
+
+class GridManagement:
+    def __init__(self, active_machines, next_instance, grid_height, grid_width, matrix_blob):
+        self.active_machines = active_machines
+
+        if matrix_blob:
+            unpacked_grid_data = np.frombuffer(matrix_blob, dtype=int)
+            self.grid = unpacked_grid_data.reshape((grid_height, grid_width))
+            self._next_instance = next_instance
+        else:
+            self.grid = np.zeros((grid_height, grid_width), dtype=int)
+            self._next_instance = 1
+    
+    def set_tile(self, machine_id, anchor_pos_x, anchor_pos_y, machine_height, machine_width):
+        if anchor_pos_y >= 0 and anchor_pos_x >= 0 and (anchor_pos_y + machine_height) <= self.grid.shape[0] and (anchor_pos_x + machine_width) <= self.grid.shape[1]:
+
+            current_id = self._next_instance
+
+            self.grid[anchor_pos_y: anchor_pos_y + machine_height, anchor_pos_x: anchor_pos_x + machine_width] = current_id
+            self.active_machines[current_id] = {"machine_id": machine_id, "anchor_pos_x": anchor_pos_x, "anchor_pos_y": anchor_pos_y}
+            self._next_instance += 1
+        else:
+            print(Fore.RED + f"Failed to place machine {machine_id} on grid! Not in grid range: height {self.grid.shape[0]} and width {self.grid.shape[1]}")
+    
+    def get_tile(self, pos_x, pos_y):
+        if pos_y >= 0 and pos_x >= 0 and pos_y < self.grid.shape[0] and pos_x < self.grid.shape[1]:
+            return self.grid[pos_y, pos_x]
+        else:
+            print(Fore.RED + f"Failed to obtain tile data {pos_x}, {pos_y}")
+            return 0
+    
+    def remove_tile(self, instance_id, width, height):
+        target = self.active_machines.get(instance_id)
+
+        if not target: return
+
+        else:
+            anchor_pos_y = self.active_machines[instance_id]["anchor_pos_y"]
+            anchor_pos_x = self.active_machines[instance_id]["anchor_pos_x"]
+        
+            self.grid[anchor_pos_y: anchor_pos_y + height, anchor_pos_x: anchor_pos_x + width] = 0
+
+            del self.active_machines[instance_id]
+    
+    def get_blob(self):
+        return self.grid.tobytes()
