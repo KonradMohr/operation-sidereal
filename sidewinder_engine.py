@@ -203,7 +203,7 @@ class GameState:
                 width INTEGER,
                 matrix_blob BLOB,
                 next_instance INTEGER,
-                active_machines_json TEXT
+                grid_metadata_json TEXT
             )
             '''
         )
@@ -220,7 +220,6 @@ class GameState:
             ''',
             (galaxy_id, name, pos_x, pos_y, radius)
         )
-        self.conn.commit()
 
     def make_solarsystem(self, solarsystem_id, galaxy_id, name, distance, orbit, star_type):
         self.cursor.execute('''
@@ -229,7 +228,6 @@ class GameState:
             ''',
             (solarsystem_id, galaxy_id, name, distance, orbit, star_type)
         )
-        self.conn.commit()
     
     def make_ship_equipment(self, ship_id, slot_type, item_id):
         self.cursor.execute('''
@@ -238,7 +236,6 @@ class GameState:
             ''',
             (ship_id, slot_type, item_id)
         )
-        self.conn.commit()
 
     def make_planet(self, planet_id, solarsystem_id, galaxy_id, type, distance, orbit, time, waterlv, map_path):
         self.cursor.execute('''
@@ -247,7 +244,6 @@ class GameState:
             ''', 
             (planet_id, solarsystem_id, galaxy_id, type, distance, orbit, time, waterlv, map_path)
         )
-        self.conn.commit()
     
     def make_planet_inventory(self, planet_id, item_id, quantity, max_storage):
         self.cursor.execute('''
@@ -256,7 +252,6 @@ class GameState:
             ''',
             (planet_id, item_id, quantity, max_storage)
         )
-        self.conn.commit()
 
     def make_ship(self, ship_id, type, pos_x, pos_y, health):
         self.cursor.execute('''
@@ -265,7 +260,6 @@ class GameState:
             ''',
             (ship_id, type, pos_x, pos_y, health)
         )
-        self.conn.commit()
 
     def make_total_throughput(self, planet_id, item_id, net_change, tick_cycle):
         self.cursor.execute('''
@@ -274,7 +268,6 @@ class GameState:
             ''',
             (planet_id, item_id, net_change, tick_cycle)
         )
-        self.conn.commit()
     
     def make_ship_inventory(self, ship_id, item_id, quantity, max_storage):
         self.cursor.execute('''
@@ -283,7 +276,6 @@ class GameState:
             ''',
             (ship_id, item_id, quantity, max_storage)
         )
-        self.conn.commit()
     
     def make_factory_tilegrid(self, grid_id, planet_id, pos_x, pos_y):
         self.cursor.execute('''
@@ -292,16 +284,14 @@ class GameState:
             ''',
             (grid_id, planet_id, pos_x, pos_y)
         )
-        self.conn.commit()
     
-    def make_grid_data(self, grid_id, height, width, matrix_blob, next_instance, active_machines_json):
+    def make_grid_data(self, grid_id, height, width, matrix_blob, next_instance, grid_metadata_json):
         self.cursor.execute('''
-            INSERT INTO grid_data (grid_id, height, width, matrix_blob, next_instance, active_machines_json)
+            INSERT INTO grid_data (grid_id, height, width, matrix_blob, next_instance, grid_metadata_json)
             VALUES (?, ?, ?, ?)
             ''',
-            (grid_id, height, width, matrix_blob, next_instance, active_machines_json)
+            (grid_id, height, width, matrix_blob, next_instance, grid_metadata_json)
         )
-        self.conn.commit()
 
     # REMOVE FUNCTIONS: easier to make, and easier to use then the MAKE FUNCTIONS family
 
@@ -312,7 +302,6 @@ class GameState:
             ''',
             (planet_id,)
         )
-        self.conn.commit()
 
     def remove_ship(self, ship_id):
         self.cursor.execute('''
@@ -321,7 +310,6 @@ class GameState:
             ''',
             (ship_id,)
         )
-        self.conn.commit()
     
     def remove_galaxy(self, galaxy_id):
         self.cursor.execute('''
@@ -330,7 +318,6 @@ class GameState:
             ''',
             (galaxy_id,)
         )
-        self.conn.commit()
     
     def remove_solarsystem(self, solarsystem_id):
         self.cursor.execute('''
@@ -339,7 +326,6 @@ class GameState:
             ''',
             (solarsystem_id,)
         )
-        self.conn.commit()
     
     def remove_ship_equipment(self, ship_id):
         self.cursor.execute('''
@@ -348,7 +334,6 @@ class GameState:
             ''',
             (ship_id,)
         )
-        self.conn.commit()
     
     def remove_planet_inventory(self, planet_id):
         self.cursor.execute('''
@@ -357,7 +342,6 @@ class GameState:
             ''',
             (planet_id,)
         )
-        self.conn.commit()
     
     def remove_ship_inventory(self, ship_id):
         self.cursor.execute('''
@@ -366,7 +350,6 @@ class GameState:
             ''',
             (ship_id,)
         )
-        self.conn.commit()
     
     def remove_total_throughput(self, planet_id):
         self.cursor.execute('''
@@ -375,7 +358,6 @@ class GameState:
             ''',
             (planet_id,)
         )
-        self.conn.commit()
 
     def remove_factory_tilegrid(self, grid_id):
         self.cursor.execute('''
@@ -384,7 +366,6 @@ class GameState:
             ''',
             (grid_id,)
         )
-        self.conn.commit()
     
     def remove_grid_data(self, grid_id):
         self.cursor.execute('''
@@ -404,7 +385,6 @@ class GameState:
             ''',
             (solarsystem_id, galaxy_id, type, distance, orbit, time, waterlv, map_path, planet_id)
         )
-        self.conn.commit()
 
     def save_ship(self, ship_id, pos_x, pos_y, health):
         self.cursor.execute('''
@@ -414,7 +394,6 @@ class GameState:
             ''',
             (pos_x, pos_y, health, ship_id)
         )
-        self.conn.commit()
     
     def save_galaxy(self, galaxy_id, name, pos_x, pos_y, radius):
         self.cursor.execute('''
@@ -424,7 +403,6 @@ class GameState:
             ''',
             (name, pos_x, pos_y, radius, galaxy_id)
         )
-        self.conn.commit()
 
     def save_solarsystem(self, solarsystem_id, galaxy_id, name, distance, orbit, star_type):
         self.cursor.execute('''
@@ -434,7 +412,6 @@ class GameState:
             ''',
             (galaxy_id, name, distance, orbit, star_type, solarsystem_id)
         )
-        self.conn.commit()
 
     def save_planet_inventory(self, planet_id, item_id, quantity, max_storage):
         self.cursor.execute('''
@@ -444,7 +421,6 @@ class GameState:
             ''',
             (quantity, max_storage, planet_id, item_id)
         )
-        self.conn.commit()
     
     def save_ship_inventory(self, ship_id, item_id, quantity, max_storage):
         self.cursor.execute('''
@@ -454,7 +430,6 @@ class GameState:
             ''',
             (quantity, max_storage, ship_id, item_id)
         )
-        self.conn.commit()
     
     def save_ship_equipment(self, ship_id, slot_type, item_id):
         self.cursor.execute('''
@@ -464,7 +439,6 @@ class GameState:
             ''',
             (item_id, ship_id, slot_type)
         )
-        self.conn.commit()
 
     def save_total_throughput(self, planet_id, item_id, net_change, tick_cycle):
         self.cursor.execute('''
@@ -474,17 +448,15 @@ class GameState:
             ''',
             (net_change, tick_cycle, planet_id, item_id)
         )
-        self.conn.commit()
     
-    def save_grid_data(self, grid_id, height, width, matrix_blob, next_instance, active_machines_json):
+    def save_grid_data(self, grid_id, height, width, matrix_blob, next_instance, grid_metadata_json):
         self.cursor.execute('''
             UPDATE grid_data
-            SET height = ?, width = ?, matrix_blob = ?, next_instance = ?, active_machines_json = ?
+            SET height = ?, width = ?, matrix_blob = ?, next_instance = ?, grid_metadata_json = ?
             WHERE grid_id = ?
             ''',
-            (height, width, matrix_blob, next_instance, active_machines_json)
+            (height, width, matrix_blob, next_instance, grid_metadata_json)
         )
-        self.conn.commit()
     
 
     # LOAD FUNCTIONS: the hardest to make, out of the CRUD functions, but the most useful. well... they are all equally useful.
@@ -707,7 +679,7 @@ class GameState:
 
     def load_grid_data(self, grid_id):
         self.cursor.execute('''
-            SELECT height, width, matrix_blob, next_instance, active_machines_json
+            SELECT height, width, matrix_blob, next_instance, grid_metadata_json
             FROM grid_data
             WHERE grid_id = ?
             ''',
@@ -721,18 +693,26 @@ class GameState:
                 "width": pre_ram[1],
                 "matrix_blob": pre_ram[2],
                 "next_instance": pre_ram[3],
-                "active_machines_json": pre_ram[4]
+                "grid_metadata_json": pre_ram[4]
             }
 
             print(Fore.GREEN + f"Loaded grid_data table {grid_id} to RAM")
             print(Fore.CYAN + str(self.grid_data_ram[grid_id]))
         else:
             print(Fore.RED + f"Failed to load grid_data table {grid_id} to RAM")
+    
+    def commit(self):
+        self.conn.commit()
+        return
 
 
 class GridManagement:
     def __init__(self, active_machines, next_instance, grid_height, grid_width, matrix_blob):
         self.active_machines = active_machines
+        self.active_networks = {}
+        self.tile_to_network = {}
+        self._network_id = 1
+        self.tile_facing = {}
 
         if matrix_blob:
             unpacked_grid_data = np.frombuffer(matrix_blob, dtype=int)
@@ -742,13 +722,18 @@ class GridManagement:
             self.grid = np.zeros((grid_height, grid_width), dtype=int)
             self._next_instance = 1
     
-    def set_tile(self, machine_id, anchor_pos_x, anchor_pos_y, machine_height, machine_width):
+    def set_tile(self, machine_id, anchor_pos_x, anchor_pos_y, machine_height, machine_width, facing):
         if anchor_pos_y >= 0 and anchor_pos_x >= 0 and (anchor_pos_y + machine_height) <= self.grid.shape[0] and (anchor_pos_x + machine_width) <= self.grid.shape[1]:
 
             current_id = self._next_instance
 
+            target_area = self.grid[anchor_pos_y: anchor_pos_y + machine_height, anchor_pos_x: anchor_pos_x + machine_width]
+            if np.any(target_area != 0):
+                print(Fore.RED + f"Failed to place machine {machine_id} on grid! It is overlapping another machine!")
+                return
+
             self.grid[anchor_pos_y: anchor_pos_y + machine_height, anchor_pos_x: anchor_pos_x + machine_width] = current_id
-            self.active_machines[current_id] = {"machine_id": machine_id, "anchor_pos_x": anchor_pos_x, "anchor_pos_y": anchor_pos_y}
+            self.active_machines[current_id] = {"machine_id": machine_id, "anchor_pos_x": anchor_pos_x, "anchor_pos_y": anchor_pos_y, "facing": facing}
             self._next_instance += 1
         else:
             print(Fore.RED + f"Failed to place machine {machine_id} on grid! Not in grid range: height {self.grid.shape[0]} and width {self.grid.shape[1]}")
@@ -763,6 +748,7 @@ class GridManagement:
     def remove_tile(self, instance_id, width, height):
         target = self.active_machines.get(instance_id)
 
+
         if not target: return
 
         else:
@@ -775,3 +761,103 @@ class GridManagement:
     
     def get_blob(self):
         return self.grid.tobytes()
+
+    '''
+
+    Because of pythons inefficiency and because I do not want to make a entity system to render items on a grid. I decided to use a diffrent methoud
+    to manage conveyor grids (or MAP grids in this case) in a more efficent, easier to program.
+
+    If you seen my GameState class (the one I brute-forced CRUD operations on), you may have knoticed I made a total_throughput table for planets. This
+    will be used to add up all times it take for every inputed item to be processed and outputed from a factory.
+
+    By doing this, you can make the output be a constant instead of having the script constantly wait for a item to count up before adding to the output.
+
+    This value is called RoC (Rate of Craft)
+
+    Then we have the opposite of RoC, this is RoD (Rate of Drain).
+
+    RoD is what I use to manage stalling and container's running out of resources. This is a countdown that when it hits zero, all input runs dry, and their
+    will be no more output.
+
+    So in summary, I am using a system that calculates the time it takes to output something and repeatedly add it every time the timer hits a number, or
+    the player changes the factory layout.
+
+    '''
+
+    def make_MAP_tile(self, MAP_id, pos_x, pos_y, facing):
+
+        '''
+        I am using a dynamic graph merge system to prevent lag when modifying a massive conveyor chain.
+
+        It uses loops and logic trees to split every grid into their own mass, allowing the pathing algorithim to find the input and output in a much more
+        organized way.
+        '''
+
+        # 0=N, 1=E, 2=S, 3=W
+
+        self.grid[pos_y, pos_x] = MAP_id
+        self.tile_facing[(pos_x, pos_y)] = facing
+        adjacent_cords = [(pos_x, pos_y - 1, 0), (pos_x, pos_y + 1, 2), (pos_x - 1, pos_y, 3), (pos_x + 1, pos_y, 1)]
+
+        found_networks = set()
+
+        for nx, ny, relative_dir in adjacent_cords:
+            if (nx, ny) in self.tile_to_network:
+                neighbor_facing = self.tile_facing[(nx, ny)]
+
+                if facing == relative_dir and neighbor_facing == (relative_dir - 2) % 4:
+                    found_networks.add(self.tile_to_network[(nx, ny)])
+                
+        
+        if len(found_networks) == 0:
+            net_id = f"net_{self._network_id}"
+            self._network_id += 1
+
+            self.active_networks[net_id] = {(pos_x, pos_y)}
+            self.tile_to_network[(pos_x, pos_y)] = net_id
+
+        elif len(found_networks) == 1:
+            net_id = list(found_networks)
+            net_id = net_id[0]
+
+            self.active_networks[net_id].add((pos_x, pos_y))
+            self.tile_to_network[(pos_x, pos_y)] = net_id
+
+        else:
+            found_list = list(found_networks)
+            survivor_id = found_list[0]
+            self.active_networks[survivor_id].add((pos_x, pos_y))
+            self.tile_to_network[(pos_x, pos_y)] = survivor_id
+
+            for dead_id in found_list[1:]:
+                dead_cords = self.active_networks[dead_id]
+                self.active_networks[survivor_id].update(dead_cords)
+                
+                for cx, cy in dead_cords:
+                    self.tile_to_network[(cx, cy)] = survivor_id
+                del self.active_networks[dead_id]
+    
+    def remove_MAP_tile(self, MAP_id, pos_x, pos_y):
+        if self.grid[pos_y, pos_x] != MAP_id:
+            return
+        else:
+
+            if (pos_x, pos_y) in self.tile_facing:
+                del self.tile_facing[(pos_x, pos_y)]
+            elif (pos_x, pos_y) not in self.tile_to_network:
+                return
+
+            target_net = self.tile_to_network[(pos_x, pos_y)]
+            del self.tile_to_network[(pos_x, pos_y)]
+            self.active_networks[target_net].remove((pos_x, pos_y))
+            self.grid[pos_y, pos_x] = 0
+    
+    def get_grid_metadata(self):
+        tile_facing = {}
+        tile_to_network = {}
+        active_networks = {}
+
+        for (x, y), facing in self.tile_facing.items():
+            tile_facing[f"{x},{y}"] = facing
+
+# TODO: make code to save the grids and MAP networks.
